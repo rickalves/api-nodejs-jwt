@@ -4,6 +4,7 @@ const authMiddleware = require('../middlewares/authMiddleware'); // Importa o mi
 
 const router = express.Router(); // Cria um roteador do Express
 
-router.get('/profile', authMiddleware, userController.getProfile); // Rota protegida para perfil do usuário
+// Rota protegida para perfil do usuário
+router.get('/profile', authMiddleware, userController.getProfile); 
 
 module.exports = router; // Exporta o roteador

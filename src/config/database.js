@@ -8,7 +8,8 @@ const sequelize = new Sequelize(
     process.env.DB_PASS, // Define a senha do banco de dados
     {
     host: process.env.DB_HOST, // Define o host do banco de dados
-    dialect: process.env.DB_DIALECT // Define o tipo de banco de dados (PostgreSQL, MySQL, etc.)
+    dialect: process.env.DB_DIALECT, // Define o tipo de banco de dados (PostgreSQL, MySQL, etc.)
+    logging: false, // Desativa logs SQL para um terminal mais limpo
 });
 
 module.exports = sequelize; // Exporta a conexão para ser utilizada nos modelos

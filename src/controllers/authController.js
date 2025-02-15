@@ -7,6 +7,6 @@ exports.login = async (req, res) => {
 
     if (!user) return res.status(401).json({ error: 'Usuário não encontrado' }); // Retorna erro se usuário não existir
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Gera token válido por 1 hora
+    const token = jwt.sign({ userId: user.id , role: user.role}, process.env.JWT_SECRET, { expiresIn: '1h' }); // Gera token válido por 1 hora
     res.json({ token }); // Retorna o token para o cliente
 };
