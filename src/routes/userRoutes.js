@@ -6,5 +6,7 @@ const router = express.Router(); // Cria um roteador do Express
 
 // Rota protegida para perfil do usuário
 router.get('/profile', authMiddleware, userController.getProfile); 
+// Rota protegida para perfil do usuário
+router.post('/change-password', authMiddleware, userController.changePassword);
 
 module.exports = router; // Exporta o roteador
