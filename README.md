@@ -1,127 +1,117 @@
-# 🔐 API de Autenticação com JWT (Node.js, Express, Sequelize, PostgreSQL)
+# 📌 API de Autenticação com JWT e MongoDB
 
-Esta API foi desenvolvida para demonstrar um sistema de **autenticação segura utilizando JSON Web Token (JWT)**. Ela permite **login de usuários, acesso a rotas protegidas, permissões de usuário, alteração de senha e refresh token**.
+## 📖 Descrição
+Esta API implementa um sistema de **autenticação segura** com **JWT** e **MongoDB**, incluindo funcionalidades como:
+- 🔑 **Login e geração de tokens JWT**
+- 🚪 **Logout e invalidação de tokens** (Blacklist persistente no MongoDB)
+- 👤 **Proteção de rotas com autenticação**
+- 🛡️ **Controle de acesso para administradores e usuários comuns**
 
 ## 🚀 Tecnologias Utilizadas
-- ⚡ **Node.js** - Ambiente de execução JavaScript no backend.
-- 🏗️ **Express.js** - Framework minimalista para Node.js.
-- 🛢️ **Sequelize** - ORM para interação com bancos SQL.
-- 🗄️ **PostgreSQL** - Banco de dados utilizado.
-- 🔑 **JWT (JSON Web Token)** - Para autenticação segura.
-- 🔒 **Bcrypt.js** - Para criptografar senhas.
-- 🛠️ **Dotenv** - Para gerenciar variáveis de ambiente.
+- **Node.js** + **Express** (Backend)
+- **JWT (JSON Web Token)** (Autenticação)
+- **MongoDB + Mongoose** (Armazenamento da blacklist de tokens)
+- **Sequelize + PostgreSQL** (Banco de dados relacional para usuários)
+- **Dotenv** (Gerenciamento de variáveis de ambiente)
 
 ---
 
-## 📌 Instalação e Configuração
-### **1️⃣ Clonar o repositório**
+## ⚙️ Instalação e Configuração
+### 📌 **1️⃣ Clonar o Repositório**
 ```bash
-git clone https://github.com/seu-usuario/autenticacao-jwt.git
-cd autenticacao-jwt
+git clone https://github.com/seu-usuario/api-nodejs-jwt.git
+cd api-nodejs-jwt
 ```
 
-### **2️⃣ Instalar dependências**
+### 📌 **2️⃣ Instalar Dependências**
 ```bash
 npm install
 ```
 
-### **3️⃣ Configurar variáveis de ambiente**
-Crie um arquivo **.env** na raiz do projeto e adicione:
+### 📌 **3️⃣ Configurar as Variáveis de Ambiente**
+Crie um arquivo **.env** na raiz do projeto e configure os valores conforme necessário:
 ```env
-DB_NAME=seu_banco
-DB_USER=seu_usuario
-DB_PASS=sua_senha
+PORT=3000
+JWT_SECRET=sua_chave_secreta
+MONGO_URI=mongodb://localhost:27017/api_auth_db
+DB_NAME=api_db
+DB_USER=usuario
+DB_PASS=senha
 DB_HOST=localhost
 DB_DIALECT=postgres
-JWT_SECRET=sua_chave_secreta
 ```
 
-### **4️⃣ Executar o servidor**
+### 📌 **4️⃣ Iniciar o Servidor**
 ```bash
 npm run dev
 ```
-A API rodará em **http://localhost:3000**.
+---
+
+## 🔑 **Autenticação e Controle de Acesso**
+A API protege rotas com **JWT**, garantindo que apenas usuários autenticados possam acessá-las.
+
+### 🟢 **Rota de Login**
+- **POST** `/auth/login`
+- **Body:**
+  ```json
+  {
+    "email": "usuario@email.com"
+  }
+  ```
+- **Resposta:**
+  ```json
+  {
+    "accessToken": "TOKEN_JWT",
+    "refreshToken": "TOKEN_REFRESH"
+  }
+  ```
+
+### 🛑 **Rota de Logout** (Invalidação de Token)
+- **POST** `/auth/logout`
+- **Headers:** `Authorization: Bearer TOKEN`
+- **Resposta:**
+  ```json
+  {
+    "message": "Logout realizado com sucesso!"
+  }
+  ```
+
+### 🔐 **Proteção de Rotas**
+Para acessar rotas protegidas, envie o **token JWT** no cabeçalho `Authorization`:
+```bash
+Authorization: Bearer TOKEN
+```
+- **GET** `/user/profile` → Apenas usuários autenticados
+- **GET** `/admin/dashboard` → Apenas administradores
 
 ---
 
-## 📌 Rotas da API
-### 🔹 **1️⃣ Login e Autenticação**
-- 🔑 **`POST /auth/login`** - Gera um token JWT para um usuário existente.
+## 📌 **Gerenciamento da Blacklist no MongoDB**
+Os tokens invalidados são armazenados no **MongoDB** e removidos automaticamente após **1 hora**.
 
-**Exemplo de Body (JSON):**
-```json
-{
-  "email": "usuario@email.com"
-}
-```
-**Resposta:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1..."
-}
-```
-
----
-
-### 🔹 **2️⃣ Rota Protegida (`/user/profile`)**
-- 🔒 **`GET /user/profile`** - Retorna os dados do usuário autenticado.
-
-**Cabeçalho necessário:**
-```yaml
-Authorization: Bearer SEU_TOKEN_AQUI
-```
-**Resposta:**
-```json
-{
-  "id": 1,
-  "name": "Usuário Teste",
-  "email": "usuario@email.com"
-}
-```
-
----
-
-### 🔹 **3️⃣ Alterar Senha**
-- 🔄 **`POST /user/change-password`** - Permite que o usuário altere sua senha.
-
-**Exemplo de Body (JSON):**
-```json
-{
-  "oldPassword": "senha_atual",
-  "newPassword": "nova_senha"
-}
-```
-**Resposta:**
-```json
-{
-  "message": "Senha alterada com sucesso!"
-}
+### 🟢 **Modelo da Blacklist (`models/Blacklist.js`)**
+```javascript
+const mongoose = require('mongoose');
+const BlacklistSchema = new mongoose.Schema({
+    token: { type: String, required: true, unique: true },
+    createdAt: { type: Date, default: Date.now, expires: 3600 } // Expira automaticamente
+});
+module.exports = mongoose.model('Blacklist', BlacklistSchema);
 ```
 
 ---
 
-### 🔹 **4️⃣ Refresh Token**
-- 🔄 **`POST /auth/refresh`** - Gera um novo access token quando o atual expira.
-
-**Exemplo de Body (JSON):**
-```json
-{
-  "token": "seu_refresh_token"
-}
-```
-**Resposta:**
-```json
-{
-  "accessToken": "novo_access_token"
-}
-```
+## 📌 **Testes no Postman**
+1. **Login** → Obtenha um token JWT
+2. **Acesse uma rota protegida** usando o token
+3. **Faça logout** → O token será invalidado
+4. **Tente acessar novamente** → O acesso será negado
 
 ---
 
-## 📌 Melhorias Futuras 🚀
-✅ 🔐 Logout (invalidar tokens)
-✅ 📩 Recuperação de senha via e-mail
-✅ 📊 Melhor estrutura de logs e monitoramento
+## 📌 **Melhorias Futuras** 🚀
+✅ Logs de atividades para melhor monitoramento
+✅ Recuperação de senha via e-mail
 
 ---
 

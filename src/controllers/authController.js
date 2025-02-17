@@ -51,12 +51,12 @@ exports.refreshToken = (req, res) => {
 };
 
 //cria rota para logout
-exports.logout = (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
+exports.logout = async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1]; // Obtém o token do cabeçalho Authorization
 
-    if (!token) return res.status(400).json({ error: 'Token não fornecido' });
+    if (!token) return res.status(400).json({ error: 'Token não fornecido' }); // Retorna erro se não houver token
 
-    blacklist.add(token); // Adiciona o token à lista negra
+    await blacklist.add(token); // Adiciona o token à lista negra no MongoDB
 
-    res.json({ message: 'Logout realizado com sucesso!' });
+    res.json({ message: 'Logout realizado com sucesso!' }); // Retorna confirmação de logout
 };
